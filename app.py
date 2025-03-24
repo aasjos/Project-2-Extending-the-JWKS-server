@@ -5,12 +5,17 @@ import time
 from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.hazmat.primitives import serialization
 from functools import wraps
+from datetime import datetime, timedelta, timezone
 
 # Initialize the Flask app
 app = Flask(__name__)
 
 # Function to generate and store a private key
-def generate_and_store_key(expiration_time):
+def generate_and_store_key(expiration_time=None):
+    # If no expiration time is provided, set it to 1 hour from now
+    if expiration_time is None:
+        expiration_time = int((datetime.now(timezone.utc) + timedelta(hours=1)).timestamp())
+    
     private_key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
     pem = private_key.private_bytes(
         encoding=serialization.Encoding.PEM,
@@ -150,4 +155,8 @@ def protected():
     return jsonify({'message': 'This is a protected route.'})
 
 if __name__ == '__main__':
+    # Generate a key with an expiration time (for example, 1 hour from now)
+    expiration_time = int(time.time()) + 3600  # 1 hour later
+    generate_and_store_key(expiration_time)
+
     app.run(debug=True)
